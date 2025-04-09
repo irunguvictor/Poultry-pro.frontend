@@ -40,6 +40,7 @@ export function useAuth() {
     loading.value = true
     error.value = null
     
+    
     try {
       // Ensure email and password are not empty
       if (!credentials.email || !credentials.password) {
@@ -58,7 +59,8 @@ export function useAuth() {
         // Set user data and abilities
         user.value = userData
         abilities.value = userAbilities || {}
-        
+        TokenService.setUser(userData);
+
         return response
       } else {
         throw new Error('Invalid response format from server')

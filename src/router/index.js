@@ -10,7 +10,7 @@ import Login from '@/views/UserLogin.vue';
 import Signup from '@/views/UserSignup.vue';
 
 const routes = [
-  { path: '/', component: DashboardView },
+  { path: '/', name: 'Home', component: DashboardView },
   { path: '/stock-management', component: StockManagement },
   { path: '/sales-expenses', component: SalesExpenses },
   { path: '/reports-analytics', component: ReportsAnalytics },

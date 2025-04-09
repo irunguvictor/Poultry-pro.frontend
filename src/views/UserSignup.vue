@@ -150,7 +150,7 @@ const register = async () => {
     localStorage.setItem('user', JSON.stringify(response.data.user))
 
     // Navigate to the welcome page
-    router.push('/welcome')
+    router.push('/')
   } catch (error) {
     console.error('Registration error:', error)
     if (error.response) {

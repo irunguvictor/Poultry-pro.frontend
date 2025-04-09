@@ -6,8 +6,8 @@ class TokenService {
         localStorage.setItem("authToken", token);
     }
 
-    setUser(user){
-        localStorage.setItem('"user', user);
+    setUser(user) {
+      localStorage.setItem("user", JSON.stringify(user));
     }
 
     getToken() {
