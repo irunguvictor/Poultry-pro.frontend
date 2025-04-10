@@ -14,6 +14,13 @@
       </v-col>
     </v-row>
 
+    <!-- Logout Button -->
+    <v-row class="my-4" justify="center">
+      <v-btn color="error" @click="handleLogout">
+        Logout
+      </v-btn>
+    </v-row>
+
     <!-- Feature Cards Section -->
     <v-row>
       <v-col v-for="(feature, index) in features" :key="index" cols="12" sm="6" md="4">
@@ -32,8 +39,8 @@
       <v-container>
         <v-row justify="center">
           <v-col class="text-center">
-            <p>Contact Us: support@chickenfarm.com | Phone: +123 456 789</p>
-            <p>&copy; 2025 Chicken Farm Manager. All Rights Reserved.</p>
+            <p>Contact Us: support@PoultryPro.com | Phone: +123 456 789</p>
+            <p>&copy; 2025 Poultry Pro. All Rights Reserved.</p>
           </v-col>
         </v-row>
       </v-container>
@@ -42,17 +49,32 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import authService from '@/Services/auth.service.js'
+import api from '@/Services/api.js' // To call the backend logout route if needed
 
-const userName = ref('Guest');
+const router = useRouter()
+const userName = ref('Guest')
 
-// ✅ Use onMounted to load username from localStorage
+// Load user from localStorage
 onMounted(() => {
-  const storedUser = JSON.parse(localStorage.getItem('user'));
+  const storedUser = JSON.parse(localStorage.getItem('user'))
   if (storedUser && storedUser.name) {
-    userName.value = storedUser.name;
+    userName.value = storedUser.name
   }
-});
+})
+
+const handleLogout = async () => {
+  try {
+    await api.post('logout') // Call backend logout
+  } catch (error) {
+    console.error('Error logging out:', error)
+  }
+
+  authService.logout() // Clear token and user
+  router.push({ name: 'Home' }) // Redirect to homepage or login
+}
 
 // Features List
 const features = [
@@ -62,8 +84,9 @@ const features = [
   { image: '/health.jpeg', title: 'Health Monitoring', description: 'Monitor the health of your chickens.', route: '/health-monitoring' },
   { image: '/eggs.jpeg', title: 'Egg Production Details', description: 'View detailed information about egg production.', route: '/egg-details' },
   { image: '/feeds.jpeg', title: 'Feed Management', description: 'Manage feed inventory and usage.', route: '/feeds' }
-];
+]
 </script>
+
 
 <style scoped>
 .hoverable {

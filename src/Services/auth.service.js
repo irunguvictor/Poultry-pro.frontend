@@ -1,65 +1,49 @@
-// src/services/auth.service.js
 import { ref, computed } from 'vue'
 import TokenService from './token.service'
 import api from './api'
 
-// Create reactive state
 const user = ref(null)
 const abilities = ref({})
 const loading = ref(false)
 const error = ref(null)
 
-// Export composable function to use the auth service
 export function useAuth() {
-  // Initialize auth on first use
   if (!user.value && TokenService.isAuthenticated()) {
     loadUserInfo()
   }
 
-  // Check if user is authenticated
   const isAuthenticated = computed(() => !!user.value)
-  
-  // Check if user is an admin
+
   const isAdmin = computed(() => {
     return user.value && user.value.role?.slug === 'admin'
   })
 
-  // Get current user
   const currentUser = computed(() => user.value)
 
-  // Get user abilities
   const userAbilities = computed(() => abilities.value)
 
-  // Check if user has a specific ability
   function can(ability) {
     return abilities.value[ability] === true
   }
 
-  // Login method
   async function login(credentials) {
     loading.value = true
     error.value = null
-    
-    
+
     try {
-      // Ensure email and password are not empty
       if (!credentials.email || !credentials.password) {
         throw new Error('Email and password are required')
       }
-      
+
       const response = await api.post('login', credentials)
-      
-      // Check if we have user and token in the response
+
       if (response.data.token && response.data.user) {
         const { token, user: userData, abilities: userAbilities } = response.data
-        
-        // Save token
+
         TokenService.setToken(token)
-        
-        // Set user data and abilities
         user.value = userData
         abilities.value = userAbilities || {}
-        TokenService.setUser(userData);
+        TokenService.setUser(userData)
 
         return response
       } else {
@@ -74,11 +58,10 @@ export function useAuth() {
     }
   }
 
-  // Register method
   async function register(userData) {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await api.post('register', userData)
       return response
@@ -90,23 +73,31 @@ export function useAuth() {
     }
   }
 
-  // Logout method
-  function logout() {
-    user.value = null
-    abilities.value = {}
-    TokenService.removeToken()
+  async function logout() {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post('logout')
+    } catch (err) {
+      console.error('Logout error:', err.response?.data || err.message)
+    } finally {
+      user.value = null
+      abilities.value = {}
+      TokenService.removeToken()
+      localStorage.removeItem('user') // 👈 Clear user info from localStorage
+      loading.value = false
+    }
   }
 
-  // Load user info from server
   async function loadUserInfo() {
     loading.value = true
     error.value = null
-    
+
     try {
       if (TokenService.isAuthenticated()) {
         const response = await api.get('me')
-        
-        // Check if we have valid user data
+
         if (response.data.user) {
           user.value = response.data.user
           abilities.value = response.data.abilities || {}
@@ -123,11 +114,10 @@ export function useAuth() {
     }
   }
 
-  // Update user profile
   async function updateProfile(profileData) {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await api.put('update-profile', profileData)
       user.value = response.data.user || response.data
@@ -157,7 +147,6 @@ export function useAuth() {
   }
 }
 
-// Create a global instance for non-composition API usage
 const globalAuthService = {
   isAuthenticated: () => !!user.value,
   isAdmin: () => user.value && user.value.role?.slug === 'admin',
@@ -174,9 +163,9 @@ const globalAuthService = {
     const { register } = useAuth()
     return register(userData)
   },
-  logout: () => {
+  logout: async () => {
     const { logout } = useAuth()
-    logout()
+    return logout()
   },
   loadUserInfo: async () => {
     const { loadUserInfo } = useAuth()
