@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import TokenService from './token.service'
 import api from './api'
+import router from '../router' // Add router import for redirect
 
 const user = ref(null)
 const abilities = ref({})
@@ -8,18 +9,9 @@ const loading = ref(false)
 const error = ref(null)
 
 export function useAuth() {
-  if (!user.value && TokenService.isAuthenticated()) {
-    loadUserInfo()
-  }
-
   const isAuthenticated = computed(() => !!user.value)
-
-  const isAdmin = computed(() => {
-    return user.value && user.value.role?.slug === 'admin'
-  })
-
+  const isAdmin = computed(() => user.value && user.value.role?.slug === 'admin')
   const currentUser = computed(() => user.value)
-
   const userAbilities = computed(() => abilities.value)
 
   function can(ability) {
@@ -36,14 +28,18 @@ export function useAuth() {
       }
 
       const response = await api.post('login', credentials)
+      console.log("Login Response:", response.data)
 
       if (response.data.token && response.data.user) {
         const { token, user: userData, abilities: userAbilities } = response.data
 
         TokenService.setToken(token)
+        TokenService.setUser(userData)
+
         user.value = userData
         abilities.value = userAbilities || {}
-        TokenService.setUser(userData)
+
+        await loadUserInfo()
 
         return response
       } else {
@@ -81,12 +77,18 @@ export function useAuth() {
       await api.post('logout')
     } catch (err) {
       console.error('Logout error:', err.response?.data || err.message)
+      // No problem if logout fails, still proceed
     } finally {
       user.value = null
       abilities.value = {}
       TokenService.removeToken()
-      localStorage.removeItem('user') // 👈 Clear user info from localStorage
       loading.value = false
+      if (router.currentRoute.value.name !== 'Login') {
+        router.push({ name: 'Login' })
+      }
+
+      // Optional: show a toast message
+      // toast.success('Logged out successfully')
     }
   }
 
@@ -109,6 +111,7 @@ export function useAuth() {
       console.error('Failed to load user info:', err)
       error.value = 'Failed to load user info'
       TokenService.removeToken()
+      router.push({ name: 'Login' })
     } finally {
       loading.value = false
     }

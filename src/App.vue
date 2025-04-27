@@ -10,7 +10,7 @@
     <v-btn text to="/reports-analytics">Reports</v-btn>
     <v-btn text to="/health-monitoring">Health check</v-btn>
     <v-btn text to="/egg-details">egg-details </v-btn>
-    <v-btn text to="/feeds">FeedsManagement</v-btn>
+    <v-btn text to="/feeds-management">Feeds</v-btn>
   
 
   </v-toolbar-items>

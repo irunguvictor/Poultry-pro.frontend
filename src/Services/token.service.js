@@ -1,38 +1,40 @@
-import router from '../router/index';
-import api from './api';
+import api from './api'
 
 class TokenService {
-    setToken(token){
-        localStorage.setItem("authToken", token);
-    }
+  setToken(token) {
+    console.log("Setting Token in localStorage --->>", token)
+    localStorage.setItem("authToken", token)
+  }
 
-    setUser(user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    }
+  setUser(user) {
+    localStorage.setItem("user", JSON.stringify(user))
+  }
 
-    getToken() {
-        const token = localStorage.getItem("authToken");
-        console.log("This is my Token --->>", token);
-        return token;
-    }
-    removeToken(){
-      localStorage.removeItem("authToken");
-      router.push('/login');
-    }
+  getToken() {
+    const token = localStorage.getItem("authToken")
+    console.log("This is my Token --->>", token)
+    return token
+  }
 
-    isAuthenticated(){
-      return !!this.getToken();
-    }
+  removeToken() {
+    console.log("Removing Token and User from localStorage")
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("user")
+  }
 
-    async userInfo() {
-        try {
-          const response = await api.get('me');
-          localStorage.setItem("user", response.data.name);
-        } catch (error) {
-          console.error('No Authenticated User Was Found', error);
-        }
-      }
+  isAuthenticated() {
+    return !!this.getToken()
+  }
+
+  async userInfo() {
+    try {
+      const response = await api.get('me')
+      localStorage.setItem("user", JSON.stringify(response.data.user))
+    } catch (error) {
+      console.error('No Authenticated User Was Found', error)
+    }
+  }
 }
 
-const myTokenInstance = new TokenService();
-export default myTokenInstance;
+const myTokenInstance = new TokenService()
+export default myTokenInstance

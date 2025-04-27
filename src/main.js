@@ -1,18 +1,20 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
-import store from './stores'
+import store from './stores';
 
 
-// Import Vuetify
 import { createVuetify } from 'vuetify';
 import 'vuetify/styles';
-
-// Import individual Vuetify components
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
+import axios from 'axios';
 
-// Create Vuetify instance with components and directives
+
+axios.defaults.baseURL = 'http://localhost:8000'; 
+axios.defaults.withCredentials = true; 
+
+
 const vuetify = createVuetify({
   components,
   directives,
@@ -21,5 +23,5 @@ const vuetify = createVuetify({
 createApp(App)
   .use(router)
   .use(store)
-  .use(vuetify) // Make sure Vuetify is registered
+  .use(vuetify)
   .mount('#app');

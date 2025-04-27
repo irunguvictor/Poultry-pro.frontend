@@ -52,7 +52,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '@/Services/auth.service.js'
-import api from '@/Services/api.js' // To call the backend logout route if needed
+import api from '@/Services/api.js'
 
 const router = useRouter()
 const userName = ref('Guest')
@@ -67,13 +67,18 @@ onMounted(() => {
 
 const handleLogout = async () => {
   try {
-    await api.post('logout') // Call backend logout
+    const token = localStorage.getItem('token')
+    if (token) {
+      await api.post('logout', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    }
   } catch (error) {
     console.error('Error logging out:', error)
   }
 
-  authService.logout() // Clear token and user
-  router.push({ name: 'Home' }) // Redirect to homepage or login
+  authService.logout()
+  router.push('/') // Safer than name-based in case route name mismatch
 }
 
 // Features List
@@ -83,7 +88,8 @@ const features = [
   { image: '/reports.jpeg', title: 'Reports & Analytics', description: 'Generate detailed reports and analytics.', route: '/reports-analytics' },
   { image: '/health.jpeg', title: 'Health Monitoring', description: 'Monitor the health of your chickens.', route: '/health-monitoring' },
   { image: '/eggs.jpeg', title: 'Egg Production Details', description: 'View detailed information about egg production.', route: '/egg-details' },
-  { image: '/feeds.jpeg', title: 'Feed Management', description: 'Manage feed inventory and usage.', route: '/feeds' }
+  {image: '/feeds.jpeg', title: 'Feed Management', description: 'Manage feed and nutrition for your chickens.', route: '/feeds-management' }
+  
 ]
 </script>
 

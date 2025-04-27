@@ -1,4 +1,3 @@
-
 <template>
   <v-container>
     <h1>Sales & Expenses</h1>
@@ -10,8 +9,9 @@
           <v-card-title>Add Sale</v-card-title>
           <v-card-text>
             <v-form @submit.prevent="handleAddSale">
-              <v-text-field label="Sale Description" v-model="newSale.description" required></v-text-field>
-              <v-text-field label="Amount" v-model="newSale.amount" type="number" required></v-text-field>
+              <v-text-field label="Date" type="date" v-model="newSale.date" required />
+              <v-text-field label="Sale Description" v-model="newSale.description" required />
+              <v-text-field label="Amount" v-model="newSale.amount" type="number" required />
               <v-btn type="submit" color="green">Add Sale</v-btn>
             </v-form>
           </v-card-text>
@@ -24,8 +24,9 @@
           <v-card-title>Add Expense</v-card-title>
           <v-card-text>
             <v-form @submit.prevent="handleAddExpense">
-              <v-text-field label="Expense Description" v-model="newExpense.description" required></v-text-field>
-              <v-text-field label="Amount" v-model="newExpense.amount" type="number" required></v-text-field>
+              <v-text-field label="Date" type="date" v-model="newExpense.date" required />
+              <v-text-field label="Expense Description" v-model="newExpense.description" required />
+              <v-text-field label="Amount" v-model="newExpense.amount" type="number" required />
               <v-btn type="submit" color="red">Add Expense</v-btn>
             </v-form>
           </v-card-text>
@@ -33,91 +34,88 @@
       </v-col>
     </v-row>
 
-    <!-- Display Sales & Expenses -->
+    <!-- Display Tables -->
     <v-row class="mt-5">
-      <!-- Sales Table -->
       <v-col cols="12" md="6">
         <v-card>
           <v-card-title>Sales</v-card-title>
-          <v-data-table
-            :headers="salesHeaders"
-            :items="financeStore.sales"
-          ></v-data-table>
+          <v-data-table :headers="salesHeaders" :items="sales" :items-per-page="5" />
         </v-card>
       </v-col>
 
-      <!-- Expenses Table -->
       <v-col cols="12" md="6">
         <v-card>
           <v-card-title>Expenses</v-card-title>
-          <v-data-table
-            :headers="expensesHeaders"
-            :items="financeStore.expenses"
-          ></v-data-table>
+          <v-data-table :headers="expensesHeaders" :items="expenses" :items-per-page="5" />
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- Summary -->
-    <v-card class="mt-5">
-      <v-card-title>Summary</v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col cols="4"><strong>Total Sales:</strong> ${{ financeStore.totalSales }}</v-col>
-          <v-col cols="4"><strong>Total Expenses:</strong> ${{ financeStore.totalExpenses }}</v-col>
-          <v-col cols="4"><strong>Net Profit:</strong> ${{ financeStore.netProfit }}</v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <!-- ❌ Removed the summary card completely -->
   </v-container>
 </template>
 
 <script>
-import { ref } from 'vue'
-import { financeStore } from '@/stores/FinanceStore.js'
+// same script as you have, no changes needed
+import { ref, computed, onMounted } from 'vue'
+import api from '@/Services/api.js'
 
 export default {
   name: 'SalesExpenses',
   setup() {
-    // Reactive inputs for sales and expenses
-    const newSale = ref({
-      description: '',
-      amount: ''
-    })
-
-    const newExpense = ref({
-      description: '',
-      amount: ''
-    })
+    const allItems = ref([])
+    const newSale = ref({ date: '', description: '', amount: '' })
+    const newExpense = ref({ date: '', description: '', amount: '' })
 
     const salesHeaders = [
+      { text: 'Date', value: 'date' },
       { text: 'Description', value: 'description' },
       { text: 'Amount ($)', value: 'amount' }
     ]
 
     const expensesHeaders = [
+      { text: 'Date', value: 'date' },
       { text: 'Description', value: 'description' },
       { text: 'Amount ($)', value: 'amount' }
     ]
 
-    function handleAddSale() {
-      if (newSale.value.description && newSale.value.amount) {
-        financeStore.addSale({ ...newSale.value })
-        newSale.value.description = ''
-        newSale.value.amount = ''
+    const sales = computed(() => allItems.value.filter(item => item.type === 'sale'))
+    const expenses = computed(() => allItems.value.filter(item => item.type === 'expense'))
+
+    const fetchData = async () => {
+      try {
+        const res = await api.get('sales-expenses')
+        allItems.value = res.data.data || res.data
+      } catch (err) {
+        console.error('Failed to fetch data:', err)
       }
     }
 
-    function handleAddExpense() {
-      if (newExpense.value.description && newExpense.value.amount) {
-        financeStore.addExpense({ ...newExpense.value })
-        newExpense.value.description = ''
-        newExpense.value.amount = ''
+    const handleAddSale = async () => {
+      try {
+        await api.post('sales-expenses', { ...newSale.value, type: 'sale' })
+        newSale.value = { date: '', description: '', amount: '' }
+        await fetchData()
+      } catch (err) {
+        console.error('Failed to add sale:', err.response?.data || err.message)
       }
     }
+
+    const handleAddExpense = async () => {
+      try {
+        await api.post('sales-expenses', { ...newExpense.value, type: 'expense' })
+        newExpense.value = { date: '', description: '', amount: '' }
+        await fetchData()
+      } catch (err) {
+        console.error('Failed to add expense:', err.response?.data || err.message)
+      }
+    }
+
+    onMounted(fetchData)
 
     return {
-      financeStore,
+      sales,
+      expenses,
       newSale,
       newExpense,
       salesHeaders,
@@ -128,4 +126,3 @@ export default {
   }
 }
 </script>
-
